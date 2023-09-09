@@ -1,39 +1,62 @@
 package ru.home.gr.soccer.parse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.commons.io.IOUtils;
+import ru.home.gr.soccer.parse.model.FootballEvents;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 public class RequestBot {
 
-    public JsonResult getBody() {
-//        OkHttpClient client = new OkHttpClient();
-//
-//        Request request = new Request.Builder()
-//                .url("https://footapi7.p.rapidapi.com/api/matches/24/8/2023")
-//                .get()
-//                .addHeader("X-RapidAPI-Key", "83172d3ac7msh65a39f2bf95cbccp162169jsn3e38337626fc")
-//                .addHeader("X-RapidAPI-Host", "footapi7.p.rapidapi.com")
-//                .build();
-//
-//        Response response;
-        String jsonStr = null;
-        JsonResult jsonResult = null;
+    public FootballEvents getFromWebBody() {
+        OkHttpClient client = new OkHttpClient();
+
+//        String year = String.valueOf(LocalDate.now().getYear());
+//        String month = String.valueOf(LocalDate.now().getMonth().getValue());
+//        String day = String.valueOf(LocalDate.now().getDayOfMonth());
+
+        String year = "2023";
+        String month = "09";
+        String day = "19";
+
+        Request request = new Request.Builder()
+                .url("https://footapi7.p.rapidapi.com/api/matches/" + day + "/" + month + "/" + year)
+                .get()
+                .addHeader("X-RapidAPI-Key", "83172d3ac7msh65a39f2bf95cbccp162169jsn3e38337626fc")
+                .addHeader("X-RapidAPI-Host", "footapi7.p.rapidapi.com")
+                .build();
+
+        FootballEvents footballEvents = null;
 
         try {
-//                response = client.newCall(request).execute();
-//                jsonStr = Objects.requireNonNull(response.body()).string();
+            var response = client.newCall(request).execute();
+            var jsonStr = Objects.requireNonNull(response.body()).string();
             ObjectMapper mapper = new ObjectMapper();
-            FileInputStream fis = new FileInputStream("/home/dev/Projects/soccer-bot/dispatcher/src/main/resources/json.txt");
-            String stringTooLong = IOUtils.toString(fis, "UTF-8");
-            jsonResult = mapper.readValue(stringTooLong, JsonResult.class);
+
+            footballEvents = mapper.readValue(jsonStr, FootballEvents.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return jsonResult;
+        return footballEvents;
+    }
+
+    public FootballEvents getFromJsonBody() throws IOException {
+        FootballEvents footballEvents = null;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            FileInputStream fis = new FileInputStream("/home/dev/Projects/soccer-bot/dispatcher/src/main/resources/json.txt");
+            String stringTooLong = IOUtils.toString(fis, "UTF-8");
+            footballEvents = mapper.readValue(stringTooLong, FootballEvents.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return footballEvents;
     }
 
 }

@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 public class BotConfig {
 
-//    @Value("${bot.name}")
-    String botName = "x";
-//
-//    @Value("${bot.token}")
-//    String token;
-//
-//    @Value("${bot.owner}")
-//    Long ownerId;
+    @Value("${bot.name}")
+    String botName;
+
+    @Value("${bot.token}")
+    String token;
+
+    @Value("${bot.owner}")
+    Long ownerId;
 }

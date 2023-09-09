@@ -1,13 +1,16 @@
-package ru.home.gr.soccer.parse;
+package ru.home.gr.soccer.parse.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class JsonResult {
+@Getter
+@Setter
+public class FootballEvents {
     @JsonProperty("events")
     List<Event> events;
 }
