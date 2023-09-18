@@ -16,4 +16,7 @@ public class BotConfig {
 
     @Value("${bot.owner}")
     Long ownerId;
+
+    @Value("${chatId.public.group}")
+    Long chatId;
 }

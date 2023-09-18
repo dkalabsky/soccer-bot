@@ -5,8 +5,10 @@ import lombok.Getter;
 @Getter
 public enum Category {
 
-    EPL(1, "england", "Англия"),
-    RPL(21, "russia", "Россия"),
+    ENGLAND(1, "england", "Англия"),
+    RUSSIA(21, "russia", "Россия"),
+    SPAIN(36, "spain", "Испания"),
+    ITALY(33, "italy", "Италия"),
     EUROPE(1465, "europe", "Европа"),
     WORLD(1468, "world", "Мир"),
     SOUTH_AMERICA(1470, "south-america", "Южная Америка");

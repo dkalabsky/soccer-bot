@@ -8,20 +8,21 @@ import ru.home.gr.soccer.parse.model.FootballEvents;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class RequestBot {
 
-    public FootballEvents getFromWebBody() {
+    public FootballEvents tryToGetFromWebBody() {
         OkHttpClient client = new OkHttpClient();
 
-//        String year = String.valueOf(LocalDate.now().getYear());
-//        String month = String.valueOf(LocalDate.now().getMonth().getValue());
-//        String day = String.valueOf(LocalDate.now().getDayOfMonth());
+        String year = String.valueOf(LocalDate.now().getYear());
+        String month = String.valueOf(LocalDate.now().getMonth().getValue());
+        String day = String.valueOf(LocalDate.now().getDayOfMonth());
 
-        String year = "2023";
-        String month = "09";
-        String day = "19";
+//        String year = "2023";
+//        String month = "09";
+//        String day = "19";
 
         Request request = new Request.Builder()
                 .url("https://footapi7.p.rapidapi.com/api/matches/" + day + "/" + month + "/" + year)
@@ -34,10 +35,16 @@ public class RequestBot {
 
         try {
             var response = client.newCall(request).execute();
+            if (response.body() == null) {
+                response = client.newCall(request).execute();
+            }
             var jsonStr = Objects.requireNonNull(response.body()).string();
             ObjectMapper mapper = new ObjectMapper();
 
             footballEvents = mapper.readValue(jsonStr, FootballEvents.class);
+            if (footballEvents == null) {
+                throw new RuntimeException(jsonStr);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -20,12 +20,15 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static ru.home.gr.soccer.bot.dictionary.Tournament.getTournamentDescriptionRuBySlug;
 
 @Component
 @Log4j
@@ -46,58 +49,64 @@ public class SoccerBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        var msg = update.getMessage();
 
-        List<String> matches = null;
-        try {
-            matches = getFootballInfo();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        SendMessage sm = new SendMessage();
-        sm.setChatId(msg.getChatId());
-        sm.setText(matches == null ? "Сегодня матчей МЮ и ЦСКА нет" : matches.toString());
-        sendAnswer(sm);
     }
 
-    private List<String> getFootballInfo() throws IOException {
+    private StringBuilder getFootballInfo() throws IOException {
         RequestBot rq = new RequestBot();
         //все игры на текущий день(тут понять про правильность времени и зон)
-        var jsonStr = rq.getFromWebBody();
+        var jsonStr = rq.tryToGetFromWebBody();
         //найти игры МЮ и ЦСКА, сборная РФ
-
-//либо лига
-        List<String> matchesForDisplay = new ArrayList<>();
+        //либо лига
+        if(jsonStr == null){
+            log.error(null);
+        }
+        StringBuilder matchesForDisplay = new StringBuilder();
         Set<Event> allEvents = new HashSet<>();
         Map.of(Tournament.RPL.getId(), Team.CSKA_MOSCOW.getDescription(),
                 Tournament.EPL.getId(), Team.MANCHESTER_UNITED.getDescription(),
                 Tournament.RUSSIAN_CUP.getId(), Team.CSKA_MOSCOW.getDescription(),
                 Tournament.ENGLAND_CUP.getId(), Team.MANCHESTER_UNITED.getDescription())
                 .forEach((key, value) -> allEvents.add(matchesProcessor.getMatch(jsonStr, key, value)));
-//либо лч, чм, че и тд
+
+        //либо лч, чм, че и тд
         List.of(Tournament.UEFA_CHAMPIONS_LEAGUE.getSlug(),
                 Tournament.UEFA_EURO.getSlug(),
                 Tournament.UEFA_WORLD_CUP.getSlug(),
                 Tournament.WORLD_FRIENDLY.getSlug(),
                 Tournament.CONMEBOL.getSlug(),
                 Tournament.RUSSIAN_CUP.getSlug(),
-                Tournament.ENGLAND_CUP.getSlug())
+                Tournament.ENGLAND_CUP.getSlug(),
+                Tournament.RPL.getSlug(),
+                Tournament.EPL.getSlug(),
+                Tournament.LA_LIGA.getSlug(),
+                Tournament.SERIE_A.getSlug())
                 .forEach(t -> allEvents.addAll(matchesProcessor.getMatches(jsonStr, t)));
-//        allEvents.entrySet().stream().sorted(Map.Entry.comparingByValue());
+        //allEvents.entrySet().stream().sorted(Map.Entry.comparingByValue());
         allEvents.remove(null);
 
+        List<String> usedDates = new ArrayList<>();
         if (!allEvents.isEmpty()) {
 
             allEvents.stream()
                     .sorted(Comparator.comparing(Event::isMostInterst))
                     .sorted(Comparator.comparing(Event::getStartTimestamp))
                     .forEach(champion -> {
-                        var startTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(champion.getStartTimestamp()), ZoneId.systemDefault());
-                        matchesForDisplay.add("Начало в: " + startTime + " "
-                                + champion.getHomeTeam().getName()
-                                + " vs "
-                                + champion.getAwayTeam().getName()
-                                + ".\n ");
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+                        var startTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(champion.getStartTimestamp()), ZoneId.systemDefault()).format(formatter);
+                        String startTimeString = usedDates.contains(startTime) ? "" : "\n " + startTime + " \n";
+                        matchesForDisplay
+                                .append(startTimeString)
+                                .append("<b>")
+                                .append(champion.getHomeTeam().getName())
+                                .append("</b>")
+                                .append(" : ")
+                                .append("<i>")
+                                .append(champion.getAwayTeam().getName())
+                                .append("</i> (")
+                                .append(getTournamentDescriptionRuBySlug(champion.getTournament().getUniqueTournament().getSlug()).getDescriptionShortRu())
+                                .append(") \n");
+                        usedDates.add(startTime);
                     });
         }
 
@@ -116,9 +125,28 @@ public class SoccerBot extends TelegramLongPollingBot {
     }
 
 
-    @Scheduled(cron = "${event.cron.scheduler.by.sunday}")
-    public void startEventPoll() {
+    @Scheduled(cron = "${event.cron.scheduler.by.everyday}")
+//    @Scheduled(fixedDelay = 1000000)
+    public void startEventInfo() {
+        StringBuilder matches = new StringBuilder();
+        try {
+            matches = getFootballInfo();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        SendMessage sm = new SendMessage();
+        sm.enableHtml(true);
+        sm.setChatId(botConfig.getChatId());
+        sm.setText(matches.toString());
+        sendAnswer(sm);
+    }
 
+    @Scheduled(cron = "${event.cron.scheduler.by.everyday.repeat}")
+    public void startRepeatEvent() {
+        SendMessage sm = new SendMessage();
+        sm.setChatId(botConfig.getChatId());
+        sm.setText("^^^^^^^^^^^^^^");
+        sendAnswer(sm);
     }
 
     public void sendAnswer(BotApiMethodMessage message) {
