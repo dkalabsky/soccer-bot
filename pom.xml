@@ -110,7 +110,7 @@
                 <configuration>
                     <mainClass>ru.home.gr.DispatcherApp</mainClass>
                     <layout>JAR</layout>
-                    <finalName>bot</finalName>
+                    <finalName>soccer-bot</finalName>
                 </configuration>
             </plugin>
         </plugins>
