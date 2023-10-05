@@ -55,12 +55,9 @@ public class SoccerBot extends TelegramLongPollingBot {
     private StringBuilder getFootballInfo() throws IOException {
         RequestBot rq = new RequestBot();
         //все игры на текущий день(тут понять про правильность времени и зон)
-        var jsonStr = rq.tryToGetFromWebBody();
+        final var jsonStr = rq.tryToGetFromWebBody();
         //найти игры МЮ и ЦСКА, сборная РФ
         //либо лига
-        if(jsonStr == null){
-            log.error(null);
-        }
         StringBuilder matchesForDisplay = new StringBuilder();
         Set<Event> allEvents = new HashSet<>();
         Map.of(Tournament.RPL.getId(), Team.CSKA_MOSCOW.getDescription(),
@@ -70,17 +67,26 @@ public class SoccerBot extends TelegramLongPollingBot {
                 .forEach((key, value) -> allEvents.add(matchesProcessor.getMatch(jsonStr, key, value)));
 
         //либо лч, чм, че и тд
-        List.of(Tournament.UEFA_CHAMPIONS_LEAGUE.getSlug(),
-                Tournament.UEFA_EURO.getSlug(),
-                Tournament.UEFA_WORLD_CUP.getSlug(),
-                Tournament.WORLD_FRIENDLY.getSlug(),
-                Tournament.CONMEBOL.getSlug(),
-                Tournament.RUSSIAN_CUP.getSlug(),
-                Tournament.ENGLAND_CUP.getSlug(),
+        List.of(
                 Tournament.RPL.getSlug(),
                 Tournament.EPL.getSlug(),
                 Tournament.LA_LIGA.getSlug(),
-                Tournament.SERIE_A.getSlug())
+                Tournament.SERIE_A.getSlug(),
+                Tournament.BUNDESLIGA.getSlug(),
+//                Tournament.LIGUE_1.getSlug(),
+                Tournament.RUSSIAN_CUP.getSlug(),
+                Tournament.ENGLAND_CUP.getSlug(),
+                Tournament.SPANISH_CUP.getSlug(),
+                Tournament.ITALY_CUP.getSlug(),
+                Tournament.DFB_POKAL.getSlug(),
+//                Tournament.FRANCE_CUP.getSlug(),
+                Tournament.UEFA_CHAMPIONS_LEAGUE.getSlug(),
+                Tournament.UEFA_EUROPA_LEAGUE.getSlug(),
+                Tournament.UEFA_EURO.getSlug(),
+                Tournament.UEFA_WORLD_CUP.getSlug(),
+                Tournament.CONMEBOL.getSlug(),
+                Tournament.WORLD_FRIENDLY.getSlug()
+        )
                 .forEach(t -> allEvents.addAll(matchesProcessor.getMatches(jsonStr, t)));
         //allEvents.entrySet().stream().sorted(Map.Entry.comparingByValue());
         allEvents.remove(null);

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ru.home.gr.soccer.bot.dictionary.Tournament.UEFA_CHAMPIONS_LEAGUE;
+import static ru.home.gr.soccer.bot.dictionary.Tournament.UEFA_EUROPA_LEAGUE;
 
 @Component
 @Log4j
@@ -44,9 +45,14 @@ public class MatchesProcessorImpl implements MatchesProcessor {
         if (tournament.equals(UEFA_CHAMPIONS_LEAGUE.getSlug()) && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.TUESDAY) && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.WEDNESDAY)) {
             return Collections.emptyList();
         }
+        //найти все игры ЛЕ только по четвергам!
+        if (tournament.equals(UEFA_EUROPA_LEAGUE.getSlug()) && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.THURSDAY)) {
+            return Collections.emptyList();
+        }
         //TODO временное решение, поменять нормально по возможности
         if(Tournament.EPL.getSlug().equals(tournament)) {
             return jsonStr.getEvents().stream()
+                    .filter(event -> event.getTournament().getUniqueTournament() != null)
                     .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
                     .filter(event -> event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
                     .filter(event ->
@@ -56,6 +62,7 @@ public class MatchesProcessorImpl implements MatchesProcessor {
                     .collect(Collectors.toList());
         } else {
             return jsonStr.getEvents().stream()
+                    .filter(event -> event.getTournament().getUniqueTournament() != null)
                     .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
                     .filter(event ->
                             LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now()))
