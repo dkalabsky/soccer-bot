@@ -41,6 +41,11 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
@@ -108,7 +113,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ru.home.gr.DispatcherApp</mainClass>
+                    <mainClass>ru.home.gr.soccer.DispatcherApp</mainClass>
                     <layout>JAR</layout>
                     <finalName>soccer-bot</finalName>
                 </configuration>

@@ -1,6 +1,7 @@
 package ru.home.gr.soccer.parse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.log4j.Log4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.io.IOUtils;
@@ -9,12 +10,17 @@ import ru.home.gr.soccer.parse.model.FootballEvents;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
+@Log4j
 public class RequestBot {
 
     public FootballEvents tryToGetFromWebBody() {
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
 
         String year = String.valueOf(LocalDate.now().getYear());
         String month = String.valueOf(LocalDate.now().getMonth().getValue());
@@ -35,15 +41,14 @@ public class RequestBot {
 
         try {
             var response = client.newCall(request).execute();
-            if (response.body() == null) {
-                response = client.newCall(request).execute();
-            }
-            var jsonStr = Objects.requireNonNull(response.body()).string();
-            ObjectMapper mapper = new ObjectMapper();
 
-            footballEvents = mapper.readValue(jsonStr, FootballEvents.class);
-            if (footballEvents == null) {
-                throw new RuntimeException(jsonStr);
+            if ((response.code()) == 200) {
+                // Get response
+                String jsonStr = response.body().string();
+                ObjectMapper mapper = new ObjectMapper();
+
+                footballEvents = mapper.readValue(jsonStr, FootballEvents.class);
+
             }
         } catch (IOException e) {
             e.printStackTrace();

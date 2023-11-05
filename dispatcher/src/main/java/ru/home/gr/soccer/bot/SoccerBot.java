@@ -15,6 +15,7 @@ import ru.home.gr.soccer.bot.dictionary.Tournament;
 import ru.home.gr.soccer.bot.service.MatchesProcessor;
 import ru.home.gr.soccer.parse.RequestBot;
 import ru.home.gr.soccer.parse.model.Event;
+import ru.home.gr.soccer.parse.model.FootballEvents;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -26,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static ru.home.gr.soccer.bot.dictionary.Tournament.getTournamentDescriptionRuBySlug;
@@ -55,16 +57,23 @@ public class SoccerBot extends TelegramLongPollingBot {
     private StringBuilder getFootballInfo() throws IOException {
         RequestBot rq = new RequestBot();
         //все игры на текущий день(тут понять про правильность времени и зон)
-        final var jsonStr = rq.tryToGetFromWebBody();
+        FootballEvents jsonStr = rq.tryToGetFromWebBody();
+        if(Objects.isNull(jsonStr)){
+            jsonStr = rq.tryToGetFromWebBody();
+        }
+        if(Objects.isNull(jsonStr)){
+            throw new RuntimeException("Сервис временно не доступен!");
+        }
         //найти игры МЮ и ЦСКА, сборная РФ
         //либо лига
         StringBuilder matchesForDisplay = new StringBuilder();
         Set<Event> allEvents = new HashSet<>();
+        FootballEvents finalJsonStr = jsonStr;
         Map.of(Tournament.RPL.getId(), Team.CSKA_MOSCOW.getDescription(),
                 Tournament.EPL.getId(), Team.MANCHESTER_UNITED.getDescription(),
                 Tournament.RUSSIAN_CUP.getId(), Team.CSKA_MOSCOW.getDescription(),
                 Tournament.ENGLAND_CUP.getId(), Team.MANCHESTER_UNITED.getDescription())
-                .forEach((key, value) -> allEvents.add(matchesProcessor.getMatch(jsonStr, key, value)));
+                .forEach((key, value) -> allEvents.add(matchesProcessor.getMatch(finalJsonStr, key, value)));
 
         //либо лч, чм, че и тд
         List.of(
@@ -87,7 +96,7 @@ public class SoccerBot extends TelegramLongPollingBot {
                 Tournament.CONMEBOL.getSlug(),
                 Tournament.WORLD_FRIENDLY.getSlug()
         )
-                .forEach(t -> allEvents.addAll(matchesProcessor.getMatches(jsonStr, t)));
+                .forEach(t -> allEvents.addAll(matchesProcessor.getMatches(finalJsonStr, t)));
         //allEvents.entrySet().stream().sorted(Map.Entry.comparingByValue());
         allEvents.remove(null);
 

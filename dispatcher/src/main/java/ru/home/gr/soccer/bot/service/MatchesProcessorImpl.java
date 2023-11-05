@@ -11,6 +11,7 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
@@ -29,9 +30,9 @@ public class MatchesProcessorImpl implements MatchesProcessor {
                 .filter(event -> event.getTournament().getId().equals(tournamentId))
                 .filter(event -> event.getSlug().contains(command))
                 .filter(event->
-                        LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now()))
+                        LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now(ZoneId.of("Europe/Moscow"))))
                 .filter(event->
-                        LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.now().plusDays(1)))
+                        LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
                 .findFirst().orElse(null);
         if (eventToDisplay != null) {
             eventToDisplay.setMostInterst(true);
@@ -56,18 +57,18 @@ public class MatchesProcessorImpl implements MatchesProcessor {
                     .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
                     .filter(event -> event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
                     .filter(event ->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now()))
+                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now(ZoneId.of("Europe/Moscow"))))
                     .filter(event->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.now().plusDays(1)))
+                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
                     .collect(Collectors.toList());
         } else {
             return jsonStr.getEvents().stream()
                     .filter(event -> event.getTournament().getUniqueTournament() != null)
                     .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
                     .filter(event ->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now()))
+                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now(ZoneId.of("Europe/Moscow"))))
                     .filter(event->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.now().plusDays(1)))
+                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
                     .collect(Collectors.toList());
         }
     }
