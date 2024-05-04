@@ -136,12 +136,13 @@ public class SoccerBot extends TelegramLongPollingBot {
         //найти все игры Германии
         //найти все игры Италии
         //найти все игры Франции
+        log.info("Result was send to telegram!");
         return matchesForDisplay;
     }
 
 
     @Scheduled(cron = "${event.cron.scheduler.by.everyday}")
-//    @Scheduled(fixedDelay = 1000000)
+//    @Scheduled(fixedDelay = 1000000000)
     public void startEventInfo() {
         StringBuilder matches = new StringBuilder();
         try {

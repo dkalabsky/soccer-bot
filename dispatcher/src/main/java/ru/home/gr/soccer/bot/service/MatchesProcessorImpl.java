@@ -29,10 +29,10 @@ public class MatchesProcessorImpl implements MatchesProcessor {
         var eventToDisplay = jsonStr.getEvents().stream()
                 .filter(event -> event.getTournament().getId().equals(tournamentId))
                 .filter(event -> event.getSlug().contains(command))
-                .filter(event->
-                        LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now(ZoneId.of("Europe/Moscow"))))
-                .filter(event->
-                        LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
+                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+                        .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
+                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+                        .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
                 .findFirst().orElse(null);
         if (eventToDisplay != null) {
             eventToDisplay.setMostInterst(true);
@@ -43,33 +43,46 @@ public class MatchesProcessorImpl implements MatchesProcessor {
     @Override
     public List<Event> getMatches(FootballEvents jsonStr, String tournament) {
         //найти все игры ЛЧ только по вторникам и средам!
-        if (tournament.equals(UEFA_CHAMPIONS_LEAGUE.getSlug()) && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.TUESDAY) && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.WEDNESDAY)) {
+        if (tournament.equals(UEFA_CHAMPIONS_LEAGUE.getSlug())
+                && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.TUESDAY)
+                && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.WEDNESDAY)) {
             return Collections.emptyList();
         }
         //найти все игры ЛЕ только по четвергам!
-        if (tournament.equals(UEFA_EUROPA_LEAGUE.getSlug()) && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.THURSDAY)) {
+        if (tournament.equals(UEFA_EUROPA_LEAGUE.getSlug())
+                && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.THURSDAY)) {
             return Collections.emptyList();
         }
         //TODO временное решение, поменять нормально по возможности
-        if(Tournament.EPL.getSlug().equals(tournament)) {
-            return jsonStr.getEvents().stream()
-                    .filter(event -> event.getTournament().getUniqueTournament() != null)
-                    .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
-                    .filter(event -> event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
-                    .filter(event ->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now(ZoneId.of("Europe/Moscow"))))
-                    .filter(event->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
-                    .collect(Collectors.toList());
-        } else {
-            return jsonStr.getEvents().stream()
-                    .filter(event -> event.getTournament().getUniqueTournament() != null)
-                    .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
-                    .filter(event ->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isAfter(LocalDateTime.now(ZoneId.of("Europe/Moscow"))))
-                    .filter(event->
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault()).isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
-                    .collect(Collectors.toList());
-        }
+//        if (Tournament.EPL.getSlug().equals(tournament)) {
+//            return jsonStr.getEvents().stream()
+//                    .filter(event -> event.getTournament().getUniqueTournament() != null)
+//                    .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
+//                    .filter(event -> event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
+//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+//                            .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
+//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+//                            .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
+//                    .collect(Collectors.toList());
+//        } else {
+//            return jsonStr.getEvents().stream()
+//                    .filter(event -> event.getTournament().getUniqueTournament() != null)
+//                    .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
+//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+//                            .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
+//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+//                            .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
+//                    .collect(Collectors.toList());
+//        }
+
+        return jsonStr.getEvents().stream()
+                .filter(event -> event.getTournament().getUniqueTournament() != null)
+                .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
+                .filter(event -> Tournament.EPL.getSlug().equals(tournament) == event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
+                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+                        .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
+                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
+                        .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
+                .collect(Collectors.toList());
     }
 }
