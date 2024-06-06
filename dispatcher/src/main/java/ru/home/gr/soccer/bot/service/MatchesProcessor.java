@@ -6,7 +6,7 @@ import ru.home.gr.soccer.parse.model.FootballEvents;
 import java.util.List;
 
 public interface MatchesProcessor {
-    Event getMatch(FootballEvents jsonStr, Integer tournament, String command);
-
     List<Event> getMatches(FootballEvents jsonStr, String tournament);
+
+    Event getMatch(FootballEvents jsonStr, Integer tournament, String command);
 }

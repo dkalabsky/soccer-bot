@@ -1,8 +1,8 @@
 package ru.home.gr.soccer.bot.service;
 
 import lombok.extern.log4j.Log4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-import ru.home.gr.soccer.bot.dictionary.Category;
 import ru.home.gr.soccer.bot.dictionary.Tournament;
 import ru.home.gr.soccer.parse.model.Event;
 import ru.home.gr.soccer.parse.model.FootballEvents;
@@ -13,8 +13,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static ru.home.gr.soccer.bot.dictionary.Tournament.UEFA_CHAMPIONS_LEAGUE;
@@ -24,65 +26,69 @@ import static ru.home.gr.soccer.bot.dictionary.Tournament.UEFA_EUROPA_LEAGUE;
 @Log4j
 public class MatchesProcessorImpl implements MatchesProcessor {
 
-    @Override
-    public Event getMatch(FootballEvents jsonStr, Integer tournamentId, String command) {
-        var eventToDisplay = jsonStr.getEvents().stream()
-                .filter(event -> event.getTournament().getId().equals(tournamentId))
-                .filter(event -> event.getSlug().contains(command))
-                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-                        .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
-                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-                        .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
-                .findFirst().orElse(null);
-        if (eventToDisplay != null) {
-            eventToDisplay.setMostInterst(true);
-        }
-        return eventToDisplay;
-    }
+    public static final String EUROPE_MOSCOW = "Europe/Moscow";
+    public static final int AMOUNT_TO_ADD = 12;
 
     @Override
     public List<Event> getMatches(FootballEvents jsonStr, String tournament) {
-        //найти все игры ЛЧ только по вторникам и средам!
-        if (tournament.equals(UEFA_CHAMPIONS_LEAGUE.getSlug())
-                && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.TUESDAY)
-                && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.WEDNESDAY)) {
+        //Нет смысла искать матчи ЛЧ, ЛЧ только по вторникам и средам!
+        if (tournament.equals(UEFA_CHAMPIONS_LEAGUE.getSlug()) && !LocalDate.now()
+                                                                            .getDayOfWeek()
+                                                                            .equals(DayOfWeek.TUESDAY) && !LocalDate.now()
+                                                                                                                    .getDayOfWeek()
+                                                                                                                    .equals(DayOfWeek.WEDNESDAY)) {
             return Collections.emptyList();
         }
-        //найти все игры ЛЕ только по четвергам!
-        if (tournament.equals(UEFA_EUROPA_LEAGUE.getSlug())
-                && !LocalDate.now().getDayOfWeek().equals(DayOfWeek.THURSDAY)) {
+        //Нет смысла искать матчи ЛЕ, ЛЕ только по четвергам!
+        if (tournament.equals(UEFA_EUROPA_LEAGUE.getSlug()) && !LocalDate.now()
+                                                                         .getDayOfWeek()
+                                                                         .equals(DayOfWeek.THURSDAY)) {
             return Collections.emptyList();
         }
-        //TODO временное решение, поменять нормально по возможности
-//        if (Tournament.EPL.getSlug().equals(tournament)) {
-//            return jsonStr.getEvents().stream()
-//                    .filter(event -> event.getTournament().getUniqueTournament() != null)
-//                    .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
-//                    .filter(event -> event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
-//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-//                            .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
-//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-//                            .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
-//                    .collect(Collectors.toList());
-//        } else {
-//            return jsonStr.getEvents().stream()
-//                    .filter(event -> event.getTournament().getUniqueTournament() != null)
-//                    .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
-//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-//                            .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
-//                    .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-//                            .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
-//                    .collect(Collectors.toList());
-//        }
 
-        return jsonStr.getEvents().stream()
-                .filter(event -> event.getTournament().getUniqueTournament() != null)
-                .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
-                .filter(event -> Tournament.EPL.getSlug().equals(tournament) == event.getTournament().getCategory().getSlug().equals(Category.ENGLAND.getDescription()))
-                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-                        .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT)))
-                .filter(event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault())
-                        .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of("Europe/Moscow")), LocalTime.MIDNIGHT.minusMinutes(1))))
-                .collect(Collectors.toList());
+        return jsonStr.getEvents()
+                      .stream()
+                      .filter(event -> event.getTournament().getUniqueTournament() != null)
+                      .filter(event -> event.getTournament().getUniqueTournament().getSlug().equals(tournament))
+                      .filter(event -> event.getTournament()
+                                            .getCategory()
+                                            .getSlug()
+                                            .equals(Tournament.getTournamentBySlug(tournament).getTournamentCategory()))
+                      .filter(getEventPredicateIsAfter())
+                      .filter(getEventPredicateIsBefore())
+                      .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private Predicate<Event> getEventPredicateIsBefore() {
+        //до завтрашнего обеда
+        return event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.of(EUROPE_MOSCOW))
+                                     .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of(EUROPE_MOSCOW))
+                                                                         .plus(1, ChronoUnit.DAYS), LocalTime.NOON.minusMinutes(1)));
+    }
+
+    @NotNull
+    private Predicate<Event> getEventPredicateIsAfter() {
+        //с обеда
+        return event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.of(EUROPE_MOSCOW))
+                                     .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of(EUROPE_MOSCOW)), LocalTime.NOON));
+        //                                             .plus(AMOUNT_TO_ADD, ChronoUnit.HOURS)));
+
+    }
+
+    @Override
+    public Event getMatch(FootballEvents jsonStr, Integer tournamentId, String command) {
+        var eventToDisplay = jsonStr.getEvents()
+                                    .stream()
+                                    .filter(event -> event.getTournament().getId().equals(tournamentId))
+                                    .filter(event -> event.getSlug().contains(command))
+                                    .filter(getEventPredicateIsAfter())
+                                    .filter(getEventPredicateIsBefore())
+                                    .findFirst()
+                                    .orElse(null);
+        if (eventToDisplay != null) {
+            eventToDisplay.setMostInterest(true);
+        }
+        return eventToDisplay;
     }
 }
