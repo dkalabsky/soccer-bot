@@ -34,7 +34,7 @@ public class FootballInfoProcessor {
     }
 
     public StringBuilder getFootballInfo() throws IOException {
-        var jsonStr = RequestBot.builder().build().getFootballEventsFromJson();
+        var jsonStr = RequestBot.builder().build().tryToGetFromWebBody();
         if (Objects.isNull(jsonStr)) {
             throw new RuntimeException("Сервис временно не доступен!");
         }

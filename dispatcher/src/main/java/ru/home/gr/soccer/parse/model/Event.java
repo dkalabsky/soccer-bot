@@ -46,6 +46,18 @@ public class Event {
     @JsonProperty("awayTeam")
     Team awayTeam;
 
+    @JsonProperty("status")
+    @Description("Статус по игре")
+    EventStatus status;
+
+    @Description("Счет команды домашней")
+    @JsonProperty("homeScore")
+    TeamScore homeScore;
+
+    @Description("Счет команды на выезде")
+    @JsonProperty("awayScore")
+    TeamScore awayScore;
+
     @Description("заполняется true для сортировки интересующих команд")
     boolean mostInterest;
 }
