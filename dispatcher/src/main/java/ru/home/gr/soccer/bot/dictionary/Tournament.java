@@ -16,6 +16,7 @@ public enum Tournament {
     BUNDESLIGA(42, "bundesliga","BUNDESLIGA", "Бундеслига", "germany"),
     LIGUE_1(7, "ligue-1","Ligue 1", "Лига 1", "france"),
     VISHA_LIGA(86, "premier-league","Premier League", "Вища Лига", "ukraine"),
+    SERIE_A_BRAZIL(83, "brasileirao-serie-a", "Brasileirão Série A", "Сериа А Бразилии", "brazil"),
 
     RUSSIAN_CUP(87665, "russian-cup", "Russian Cup", "Кубок России", "russia"),
     ENGLAND_CUP(17, "efl-cup", "EFL Cup", "Кубок Англии", "england"),
@@ -26,7 +27,8 @@ public enum Tournament {
 
     UEFA_CHAMPIONS_LEAGUE(1466, "uefa-champions-league", "UEFA Champions League", "Лига Чемпионов", "europa"),
     UEFA_EUROPA_LEAGUE(10911, "uefa-europa-league", "UEFA Europa League", "Лига европы", "europa"),
-    UEFA_EURO(4508, "european-championship-qualification", "UEFA European Championship", "Чемпионат Европы", "europa"),
+    UEFA_EURO_QUALIFICATION(4508, "european-championship-qualification", "UEFA European Championship", "Чемпионат Европы отборочные", "europa"),
+    UEFA_EURO(1465, "european-championship", "UEFA European Championship", "Чемпионат Европы", "europe"),
     UEFA_WORLD_CUP(-2, "word-championship-qualification", "UEFA World Cup", "Чемпионат Мира", "europa"),
     WORLD_FRIENDLY(66, "int-friendly-games", "Int. Friendly Games", "Товарищеский матч(сборные)", "world"),
     CONMEBOL(1434, "world-championship-qual-conmebol", "World Championship Qual. CONMEBOL", "ЧМ Южная Америка", "europa"),
@@ -74,10 +76,13 @@ public enum Tournament {
 //                Tournament.FRANCE_CUP.getSlug(),
                 Tournament.UEFA_CHAMPIONS_LEAGUE.getSlug(),
                 Tournament.UEFA_EUROPA_LEAGUE.getSlug(),
+                Tournament.UEFA_EURO_QUALIFICATION.getSlug(),
                 Tournament.UEFA_EURO.getSlug(),
                 Tournament.UEFA_WORLD_CUP.getSlug(),
                 Tournament.CONMEBOL.getSlug(),
-                Tournament.WORLD_FRIENDLY.getSlug()
+                Tournament.WORLD_FRIENDLY.getSlug(),
+//                Tournament.SERIE_A_BRAZIL.getSlug(),
+                Tournament.VISHA_LIGA.getSlug()
 //                Tournament.AFC.getSlug()
         );
     }

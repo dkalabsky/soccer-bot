@@ -42,7 +42,9 @@ public class SoccerBot extends TelegramLongPollingBot {
     public void startEventInfo() {
         StringBuilder matches = new StringBuilder();
         try {
-            matches = footballInfoProcessor.getFootballInfo();
+            matches.append(footballInfoProcessor.getFootballInfo(true));
+            matches.append("\n");
+            matches.append(footballInfoProcessor.getFootballInfo(false));
         } catch (IOException e) {
             e.printStackTrace();
         }

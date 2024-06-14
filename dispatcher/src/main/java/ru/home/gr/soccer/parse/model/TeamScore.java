@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TeamScore {
-    @JsonProperty("country")
+    @JsonProperty("current")
     int current;
     @JsonProperty("display")
     int display;

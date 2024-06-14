@@ -30,7 +30,7 @@ public class MatchesProcessorImpl implements MatchesProcessor {
     public static final int AMOUNT_TO_ADD = 12;
 
     @Override
-    public List<Event> getMatches(FootballEvents jsonStr, String tournament) {
+    public List<Event> getMatches(FootballEvents jsonStr, String tournament, boolean yesterday) {
         //Нет смысла искать матчи ЛЧ, ЛЧ только по вторникам и средам!
         if (tournament.equals(UEFA_CHAMPIONS_LEAGUE.getSlug()) && !LocalDate.now()
                                                                             .getDayOfWeek()
@@ -54,8 +54,8 @@ public class MatchesProcessorImpl implements MatchesProcessor {
                                             .getCategory()
                                             .getSlug()
                                             .equals(Tournament.getTournamentBySlug(tournament).getTournamentCategory()))
-                      .filter(getEventPredicateIsAfter())
-                      .filter(getEventPredicateIsBefore())
+                      .filter(yesterday ? getEventPredicateIsAfterMinusOne() : getEventPredicateIsAfter())
+                      .filter(yesterday ? getEventPredicateIsBeforeMinusOne() : getEventPredicateIsBefore())
                       .collect(Collectors.toList());
     }
 
@@ -74,6 +74,20 @@ public class MatchesProcessorImpl implements MatchesProcessor {
                                      .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of(EUROPE_MOSCOW)), LocalTime.NOON));
         //                                             .plus(AMOUNT_TO_ADD, ChronoUnit.HOURS)));
 
+    }
+
+    @NotNull
+    private Predicate<Event> getEventPredicateIsBeforeMinusOne() {
+        //до завтрашнего обеда
+        return event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.of(EUROPE_MOSCOW))
+                                     .isBefore(LocalDateTime.of(LocalDate.now(ZoneId.of(EUROPE_MOSCOW)), LocalTime.NOON.minusMinutes(1)));
+    }
+
+    @NotNull
+    private Predicate<Event> getEventPredicateIsAfterMinusOne() {
+        //с обеда
+        return event -> LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.of(EUROPE_MOSCOW))
+                                     .isAfter(LocalDateTime.of(LocalDate.now(ZoneId.of(EUROPE_MOSCOW)).minus(1, ChronoUnit.DAYS), LocalTime.NOON));
     }
 
     @Override

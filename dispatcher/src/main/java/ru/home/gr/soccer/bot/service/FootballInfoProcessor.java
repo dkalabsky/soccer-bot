@@ -33,41 +33,41 @@ public class FootballInfoProcessor {
         this.matchesProcessor = matchesProcessor;
     }
 
-    public StringBuilder getFootballInfo() throws IOException {
-        var jsonStr = RequestBot.builder().build().tryToGetFromWebBody();
+    public StringBuilder getFootballInfo(boolean yesterday) throws IOException {
+        var jsonStr = RequestBot.builder().build().tryToGetFromWebBody(yesterday);
         if (Objects.isNull(jsonStr)) {
             throw new RuntimeException("Сервис временно не доступен!");
         }
 
-        Set<Event> allEvents = getAllEvents(jsonStr);
+        Set<Event> allEvents = getAllEvents(jsonStr, yesterday);
         if (allEvents.isEmpty()) {
             return new StringBuilder();
         }
 
-        return buildMatchInfo(allEvents);
+        return buildMatchInfo(allEvents, yesterday);
     }
 
     @NotNull
-    private Set<Event> getAllEvents(FootballEvents jsonStr) {
+    private Set<Event> getAllEvents(FootballEvents jsonStr, boolean yesterday) {
         //либо лч, чм, че и тд
         Set<Event> allEvents = new HashSet<>();
-        Tournament.getAllTournaments().forEach(t -> allEvents.addAll(matchesProcessor.getMatches(jsonStr, t)));
+        Tournament.getAllTournaments().forEach(t -> allEvents.addAll(matchesProcessor.getMatches(jsonStr, t, yesterday)));
         allEvents.remove(null);
         return allEvents;
     }
 
     @NotNull
-    private StringBuilder buildMatchInfo(Set<Event> allEvents) {
+    private StringBuilder buildMatchInfo(Set<Event> allEvents, boolean yesterday) {
         StringBuilder matchesForDisplay = new StringBuilder();
         List<String> usedData = new ArrayList<>();
         allEvents.stream()
                  .sorted(Comparator.comparing(Event::getTournament).thenComparing(Event::getStartTimestamp))
-                 .forEach(event -> fillMatches(usedData, matchesForDisplay, event));
+                 .forEach(event -> fillMatches(usedData, matchesForDisplay, event, yesterday));
         log.info("Result was send to telegram!");
         return matchesForDisplay;
     }
 
-    private void fillMatches(List<String> usedData, StringBuilder matchesForDisplay, Event event) {
+    private void fillMatches(List<String> usedData, StringBuilder matchesForDisplay, Event event, boolean yesterday) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM HH:mm");
         var startTime = "\n" + ofInstant(ofEpochSecond(event.getStartTimestamp()), ZoneId.of(EUROPE_MOSCOW)).format(formatter) + " ";
         var tournamentDescription = getTournamentBySlug(event.getTournament()
@@ -78,13 +78,32 @@ public class FootballInfoProcessor {
         if (matchesForDisplay.isEmpty() && !tournamentName.isEmpty()) {
             tournamentName = tournamentName.replace("\n\n", "\n");
         }
+        if (!yesterday) {
+                fillMatchesWithoutResult(matchesForDisplay, event, startTime, tournamentName);
+        } else {
+                fillMatchesWithResult(matchesForDisplay, event, startTime, tournamentName);
+        }
+        usedData.add(tournamentName);
+    }
 
+    private void fillMatchesWithoutResult(StringBuilder matchesForDisplay, Event event, String startTime, String tournamentName) {
         matchesForDisplay.append(tournamentName)
                          .append(startTime)
                          .append(event.getHomeTeam().getName())
                          .append(" : ")
                          .append(event.getAwayTeam().getName());
-        usedData.add(tournamentName);
+    }
+
+    private void fillMatchesWithResult(StringBuilder matchesForDisplay, Event event, String startTime, String tournamentName) {
+        matchesForDisplay.append(tournamentName)
+                         .append(startTime)
+                         .append(event.getHomeTeam().getName())
+                         .append(" <tg-spoiler>")
+                         .append(event.getHomeScore().getCurrent())
+                         .append("</tg-spoiler>:<tg-spoiler>")
+                         .append(event.getAwayScore().getCurrent())
+                         .append("</tg-spoiler> ")
+                         .append(event.getAwayTeam().getName());
     }
 
     @NotNull

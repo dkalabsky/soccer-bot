@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -28,13 +29,15 @@ public class RequestBot {
     public static final String KEY = "83172d3ac7msh65a39f2bf95cbccp162169jsn3e38337626fc";
     public static final String JSON_FILE = "/home/dev/Projects/soccer-bot/dispatcher/src/main/resources/json.txt";
     public static final String FRIENDLY_JSON_FILE = "/home/dev/Projects/soccer-bot/dispatcher/src/main/resources/jsonFriendlyUEFA.txt";
+    public static final String UEFA_JSON_FILE = "/home/dev/Projects/soccer-bot/dispatcher/src/main/resources/jsonUEFA24.txt";
     public static final String LEAGUES_JSON_FILE = "/home/dev/Projects/soccer-bot/dispatcher/src/main/resources/jsonLeagues.txt";
 
-    public FootballEvents tryToGetFromWebBody() {
+    public FootballEvents tryToGetFromWebBody(boolean yesterday) {
         try {
             log.info("Send request. Waiting for response..");
-            return getFootballEventsFromJson(
-                    Objects.requireNonNull(buildOkHttpClient().newCall(buildRequest()).execute().body()).string());
+            return getFootballEventsFromJson(Objects.requireNonNull(buildOkHttpClient().newCall(buildRequest(yesterday))
+                                                                                       .execute()
+                                                                                       .body()).string());
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -51,7 +54,7 @@ public class RequestBot {
     }
 
     public FootballEvents getFootballEventsFromJson() throws IOException {
-        String jsonStr = IOUtils.toString(new FileInputStream(FRIENDLY_JSON_FILE), StandardCharsets.UTF_8);
+        String jsonStr = IOUtils.toString(new FileInputStream(UEFA_JSON_FILE), StandardCharsets.UTF_8);
         return getFootballEventsFromJson(jsonStr);
     }
 
@@ -64,10 +67,12 @@ public class RequestBot {
     }
 
     @NotNull
-    private Request buildRequest() {
+    private Request buildRequest(boolean yesterday) {
         String year = String.valueOf(LocalDate.now().getYear());
         String month = String.valueOf(LocalDate.now().getMonth().getValue());
-        String day = String.valueOf(LocalDate.now().getDayOfMonth());
+        String day = yesterday
+                ? String.valueOf(LocalDate.now().minus(1, ChronoUnit.DAYS).getDayOfMonth())
+                : String.valueOf(LocalDate.now().getDayOfMonth());
         return new Request.Builder().url(FOOTAPI_MATCHES_FAST + day + "/" + month + "/" + year)
                                     .get()
                                     .addHeader(X_RAPID_API_KEY, KEY)
